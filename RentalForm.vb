@@ -12,6 +12,16 @@ Public Class RentalForm
     Private Sub btnCalculate_Click(sender As Object, e As EventArgs) Handles CalculateButton.Click
         Dim errorMessage As String = ""
         Dim focusControl As Control = Nothing
+        Dim beginningOdometer As Decimal
+        Dim endingOdometer As Decimal
+        Dim numberOfDays As Integer
+        Dim distanceDriven As Decimal
+        Dim mileageCharge As Decimal
+        Dim chargeableMiles As Decimal
+        Dim dailyCharge As Decimal
+        Dim totalCharge As Decimal
+        Dim discountAmount As Integer
+
 
         ' Validate Customer Information
         If String.IsNullOrWhiteSpace(NameTextBox.Text) Then
@@ -40,14 +50,12 @@ Public Class RentalForm
         End If
 
         ' Validate Odometer Readings
-        Dim beginningOdometer As Decimal
         If Not Decimal.TryParse(BeginOdometerTextBox.Text, beginningOdometer) Then
             errorMessage &= "Beginning Odometer must be a valid number." & vbCrLf
             BeginOdometerTextBox.Clear()
             If focusControl Is Nothing Then focusControl = BeginOdometerTextBox
         End If
 
-        Dim endingOdometer As Decimal
         If Not Decimal.TryParse(EndOdometerTextBox.Text, endingOdometer) Then
             errorMessage &= "Ending Odometer must be a valid number." & vbCrLf
             EndOdometerTextBox.Clear()
@@ -62,7 +70,6 @@ Public Class RentalForm
         End If
 
         ' Validate Number of Days
-        Dim numberOfDays As Integer
         If Not Integer.TryParse(DaysTextBox.Text, numberOfDays) Then
             errorMessage &= "Number of Days must be a valid whole number." & vbCrLf
             DaysTextBox.Clear()
@@ -85,6 +92,43 @@ Public Class RentalForm
             Return
         End If
 
+        'Number Crunching
+        If KilometersradioButton.Checked Then
+            distanceDriven = CInt((endingOdometer - beginningOdometer) * 0.62)
+        Else
+            distanceDriven = CInt(endingOdometer - beginningOdometer)
+        End If
+
+        If distanceDriven > 200 Then
+            chargeableMiles = CInt(distanceDriven - 200)
+            If chargeableMiles <= (500 - 200) Then
+                mileageCharge = CInt(chargeableMiles * 0.12)
+            Else
+                mileageCharge = CInt((500 - 200) * 0.12 + (chargeableMiles - (500 - 200)) * 0.1)
+            End If
+        End If
+
+        dailyCharge = CInt(numberOfDays * 15)
+        totalCharge = dailyCharge + mileageCharge
+
+
+        If AAAcheckbox.Checked Then
+            discountAmount += CInt(totalCharge * 0.05)
+        End If
+
+        If Seniorcheckbox.Checked Then
+            discountAmount += CInt(totalCharge * 0.03)
+        End If
+
+        totalCharge -= discountAmount
+
+
+        'Display Output
+        TotalMilesTextBox.Text = $"{distanceDriven:N2} mi"
+        MileageChargeTextBox.Text = $"{mileageCharge:C}"
+        DayChargeTextBox.Text = $"{dailyCharge:C}"
+        TotalDiscountTextBox.Text = $"{discountAmount:C}"
+        TotalChargeTextBox.Text = $"{totalCharge:C}"
     End Sub
 
     Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles ClearButton.Click
@@ -114,7 +158,7 @@ Public Class RentalForm
     Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles ExitButton.Click
         Dim result As DialogResult = MessageBox.Show("Are you sure you want to exit?", "Exit Program", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If result = DialogResult.Yes Then
-            Application.Exit()
+            Me.Close()
         End If
     End Sub
 End Class
