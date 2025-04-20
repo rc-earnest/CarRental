@@ -7,9 +7,15 @@ Option Explicit On
 Option Strict On
 Option Compare Binary
 Public Class RentalForm
+    Dim totalCustomers As Integer
+    Dim totalDistanceDriven As Decimal
+    Dim totalCharges As Decimal
 
+    Private Sub RentalForm_Load(sender As Object, e As EventArgs) Handles Me.Load
+        SummaryButton.Enabled = False
+    End Sub
 
-    Private Sub btnCalculate_Click(sender As Object, e As EventArgs) Handles CalculateButton.Click
+    Private Sub CalculateButton_Click(sender As Object, e As EventArgs) Handles CalculateButton.Click
         Dim errorMessage As String = ""
         Dim focusControl As Control = Nothing
         Dim beginningOdometer As Decimal
@@ -45,7 +51,7 @@ Public Class RentalForm
         End If
 
         If String.IsNullOrWhiteSpace(ZipCodeTextBox.Text) Then
-            errorMessage &= "Zip Code Name cannot be blank." & vbCrLf
+            errorMessage &= "Zip Code cannot be blank." & vbCrLf
             If focusControl Is Nothing Then focusControl = ZipCodeTextBox
         End If
 
@@ -129,9 +135,15 @@ Public Class RentalForm
         DayChargeTextBox.Text = $"{dailyCharge:C}"
         TotalDiscountTextBox.Text = $"{discountAmount:C}"
         TotalChargeTextBox.Text = $"{totalCharge:C}"
+
+        'Summary Stuff Update
+        totalCustomers += 1
+        totalDistanceDriven += distanceDriven
+        totalCharges += totalCharge
+        SummaryButton.Enabled = True
     End Sub
 
-    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles ClearButton.Click
+    Sub ClearForm()
         ' Clear all text boxes
         NameTextBox.Clear()
         AddressTextBox.Clear()
@@ -155,10 +167,25 @@ Public Class RentalForm
         MilesradioButton.Checked = True
     End Sub
 
-    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles ExitButton.Click
+    Private Sub ClearButton_Click(sender As Object, e As EventArgs) Handles ClearButton.Click
+        ClearForm()
+    End Sub
+
+    Private Sub ExitButton_Click(sender As Object, e As EventArgs) Handles ExitButton.Click
         Dim result As DialogResult = MessageBox.Show("Are you sure you want to exit?", "Exit Program", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If result = DialogResult.Yes Then
             Me.Close()
         End If
     End Sub
+
+    Private Sub SummaryButton_Click(sender As Object, e As EventArgs) Handles SummaryButton.Click
+        Dim summaryMessage As String
+        ClearForm()
+        summaryMessage = $"Rental Summary: {vbCrLf}
+Total Number of Customers: {totalCustomers & vbCrLf} 
+Total Distance Driven: {totalDistanceDriven:N2} mi {vbCrLf}
+Total Charges: {totalCharges:C}"
+        MessageBox.Show(summaryMessage, "Rental Summary", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
 End Class
